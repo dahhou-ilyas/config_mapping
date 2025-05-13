@@ -1,10 +1,11 @@
 package org.example.configmapping.mapping.core.definition;
 
+
 import org.example.configmapping.mapping.api.MappingContext;
 
 import java.beans.PropertyDescriptor;
 
-public class NotNullCondition implements MappingCondition{
+public class NotNullCondition implements MappingCondition {
     private String path;
 
     public NotNullCondition() {}

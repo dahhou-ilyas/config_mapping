@@ -1,7 +1,7 @@
 package org.example.configmapping;
 
+import org.example.configmapping.mapping.TransferMappingService;
 import org.example.configmapping.mapping.core.MappingRegistry;
-import org.example.configmapping.mapping.domain.TransferMappingService;
 import org.example.configmapping.test.SopraTransferRequest;
 import org.example.configmapping.test.TransferRequestDto;
 import org.springframework.boot.CommandLineRunner;
@@ -28,14 +28,12 @@ public class ConfigMappingApplication {
         requestDto.setTransferType("DOMESTIC");
         requestDto.getMetadata().put("bankSpecificField", "valeur spécifique");
 
-        String bankId = "BANK123";
 
-        SopraTransferRequest clientRequest = bean.map(requestDto,SopraTransferRequest.class, bankId);
+        SopraTransferRequest clientRequest = bean.map(requestDto,SopraTransferRequest.class);
 
         System.out.println("Objet client mappé :");
         System.out.println(clientRequest);
 
     }
-
 
 }

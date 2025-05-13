@@ -1,5 +1,6 @@
 package org.example.configmapping.mapping.api;
 
+
 import java.util.List;
 
 /**
@@ -31,4 +32,7 @@ public interface MappingService {
      * @return Objet transformé
      */
     <S, T> T transformWithContext(S source, Class<T> targetType, MappingContext context);
+
+    <S, T> T transformWithId(S source, Class<T> targetType, String mappingId, MappingContext context);
+
 }

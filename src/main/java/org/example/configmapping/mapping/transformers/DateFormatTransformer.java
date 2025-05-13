@@ -1,10 +1,13 @@
 package org.example.configmapping.mapping.transformers;
 
+
 import org.example.configmapping.mapping.api.MappingContext;
 import org.example.configmapping.mapping.core.transform.ValueTransformer;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
+
 
 public class DateFormatTransformer implements ValueTransformer {
     private String sourceFormat;
@@ -20,8 +23,15 @@ public class DateFormatTransformer implements ValueTransformer {
     @Override
     public Object transform(Object value, MappingContext context) {
         if (value == null) return null;
+
+        String stringValue = value.toString().trim();
+        if (stringValue.isEmpty()) return null;
+
+        if (sourceFormat == null || sourceFormat.isBlank()) {
+            throw new IllegalStateException("Le format de date (sourceFormat) est manquant pour StringToDateTransformer.");
+        }
         try {
-            SimpleDateFormat srcFormat = new SimpleDateFormat(sourceFormat);
+            SimpleDateFormat srcFormat = new SimpleDateFormat(sourceFormat, Locale.ENGLISH);
             SimpleDateFormat tgtFormat = new SimpleDateFormat(targetFormat);
             Date date = srcFormat.parse(value.toString());
             return tgtFormat.format(date);

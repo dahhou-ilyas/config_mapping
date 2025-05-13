@@ -1,0 +1,32 @@
+id: "exchange-rate-to-devise-mapping"
+sourceType: "org.example.configmapping.ExchangeRate"
+targetType: "org.example.configmapping.DeviseDTO"
+priority: 100
+fieldMappings:
+  - sourcePath: "rate"
+    targetPath: "purchaseRate"
+  - sourcePath: "rate"
+    targetPath: "saleRate"
+  - sourcePath: "initialCurrency.numericCode"
+    targetPath: "initialcurrencycode"
+    transformer:
+      "@class": "org.example.configmapping.mapping.transformers.StringCastTransformer"
+  - sourcePath: "initialCurrency.alphaCode"
+    targetPath: "initialCurrency"
+  - sourcePath: "targetCurrency.numericCode"
+    targetPath: "targetcurrencycode"
+    transformer:
+      "@class": "org.example.configmapping.mapping.transformers.StringCastTransformer"
+  - sourcePath: "targetCurrency.alphaCode"
+    targetPath: "targetCurrency"
+  - sourcePath: "searchNature"
+    targetPath: "originType"
+  - targetPath: "tauxIndicatif"
+    constant: "1"
+
+
+#transformations:
+#  - method: "formatApplicationDate"
+#    description: "Formats the application date from yyyy-MM-dd to dd-MM-yyyy"
+
+# je doit ajouté cette possibilité

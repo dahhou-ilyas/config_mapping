@@ -1,6 +1,5 @@
-package org.example.configmapping.mapping.domain;
+package org.example.configmapping.mapping;
 
-import org.example.configmapping.mapping.api.MappingContext;
 import org.example.configmapping.mapping.api.MappingService;
 import org.springframework.stereotype.Service;
 
@@ -17,14 +16,17 @@ public class TransferMappingService {
      *
      * @param source l'objet source à transformer
      * @param targetType la classe du type cible
-     * @param bankId identifiant de la banque pour appliquer les overrides spécifiques
      * @param <S> type source
      * @param <T> type cible
      * @return l'objet transformé en type cible
      */
-    public <S, T> T map(S source, Class<T> targetType, String bankId) {
-        MappingContext context = new MappingContext();
-        context.setBankId(bankId);
-        return mappingService.transformWithContext(source, targetType, context);
+    public <S, T> T map(S source, Class<T> targetType) {
+        return mappingService.transform(source, targetType);
+    }
+
+
+    public <S, T> T mapWithId(S source, Class<T> targetType, String mappingId, String bankId) {
+
+        return mappingService.transformWithId(source, targetType, mappingId, null);
     }
 }

@@ -1,6 +1,5 @@
 package org.example.configmapping.mapping.core.definition;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.example.configmapping.mapping.api.MappingContext;
 

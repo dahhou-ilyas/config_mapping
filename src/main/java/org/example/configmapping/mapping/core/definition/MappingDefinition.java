@@ -1,5 +1,6 @@
 package org.example.configmapping.mapping.core.definition;
 
+
 import org.example.configmapping.mapping.api.MappingContext;
 import org.example.configmapping.mapping.exception.MappingException;
 
@@ -23,8 +24,17 @@ public class MappingDefinition {
             Object target = targetClass.getDeclaredConstructor().newInstance();
 
             // Appliquer chaque mapping de champ
+            //stocker d'abord les valeurs avec "name"
             for (FieldMapping fieldMapping : fieldMappings) {
-                fieldMapping.apply(source, target, context);
+                if (fieldMapping.getName() != null && !fieldMapping.getName().isEmpty()) {
+                    fieldMapping.apply(source, target, context);
+                }
+            }
+            //exécuter les autres mappings
+            for (FieldMapping fieldMapping : fieldMappings) {
+                if (fieldMapping.getName() == null || fieldMapping.getName().isEmpty()) {
+                    fieldMapping.apply(source, target, context);
+                }
             }
 
             return target;

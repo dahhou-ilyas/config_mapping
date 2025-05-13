@@ -1,0 +1,7 @@
+id: "transaction-to-paymentinfo-mapping"
+sourceType: "ma.adria.bank.exchangerateconnector.Source"
+targetType: "ma.adria.bank.exchangerateconnector.Target"
+priority: 1
+fieldMappings:
+  - sourcePath: "transactionId"
+    targetPath: "paymentInfo.paymentDetail.referenceNumber"
