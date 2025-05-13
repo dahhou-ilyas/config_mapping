@@ -1,165 +1,185 @@
-# ⚙️ YAML Mapping Engine User Guide
+# Configurable Mapping Engine
 
-This document explains how to use the ADRIA application's dynamic mapping engine. It allows you to define transformations from source objects to target objects via YAML files without manual coding.
-
-## ✨ Objective
-
-This engine facilitates mapping between heterogeneous data structures while maintaining great flexibility through YAML configuration. It supports:
-
-* simple mappings
-* conditional mappings
-* custom transformations (date, enums, expressions, etc.)
+A dynamic and extensible Java-based mapping engine powered by Spring Boot and YAML/JSON configuration. This project enables transformation between source and target Java objects using declarative, context-aware field mapping rules. Ideal for banking middleware, integration layers, or enterprise service architectures.
 
 ---
 
-## 📁 YAML Files Location
+## 🌐 Overview
 
-All YAML mapping files must be placed in the following directory:
+This engine allows you to define mapping rules between data models without writing Java mapping code manually. Instead, you use **YAML or JSON files** to define:
 
-```
-src/main/resources/mappings/definitions/
-```
+- Source and target types
+- Field-to-field mappings
+- Conditions (e.g. `NotNullCondition`)
+- Transformers (e.g. `RegexReplaceTransformer`, `BooleanToFlagTransformer`)
 
-Each file must have a `.yml` extension and contain a unique identifier (`id`) for the mapping.
+The system supports **custom transformers**, **SpEL expressions**, **conditional mappings**, and provides both **REST API** and **Graphical Visualization** for mapping introspection and editing.
 
 ---
 
-## 🔍 Minimal YAML File Example
+## ✨ Key Features
+
+- ✅ **Declarative configuration** of mappings (YAML/JSON)
+- 🔁 **Bidirectional object transformation** support
+- 🧠 **Context-aware mapping** with dynamic properties
+- 🧩 **Extensible via custom transformers and conditions**
+- 🔎 **REST APIs** for mapping editing and visualization
+- 📊 **Graphviz & D3.js** mapping visualization
+
+---
+
+## 📁 Project Structure
+
+```text
+org.example.configmapping
+├── api                   # Core service interfaces (MappingService, MappingContext)
+├── core                 # Engine logic: loading, applying, registering mappings
+│   ├── definition       # FieldMapping, MappingDefinition, Conditions
+│   └── transform        # ValueTransformer interface and base implementation
+├── config               # Loader for YAML/JSON configuration files
+├── transformers         # Built-in transformers (regex, enum, case, etc.)
+├── visualization        # REST APIs and D3/Graphviz generators for mapping inspection
+├── exception            # Custom exceptions
+└── jacksonConfig        # Jackson module registration for dynamic loading
+```
+
+## 🔧 Configuration Example (YAML)
 
 ```yaml
-id: forecastMovementMapping
-sourceType: ma.adria.bank.apidemo1.xyz.dtos.ExternalPrevisionnelMovement
-targetType: ma.adria.bank.dto.MouvementPrevisionnelDto
+id: exampleMapping
+sourceType: com.example.dto.InputDto
+targetType: com.example.dto.OutputDto
 priority: 1
 fieldMappings:
-  - sourcePath: "libelle"
-    targetPath: "libelle"
-  - sourcePath: "amount"
-    targetPath: "montant"
+  - sourcePath: "customerName"
+    targetPath: "name"
     transformer:
-      @class: org.example.configmapping.mapping.transformers.StringCastTransformer
-  - sourcePath: "date"
-    targetPath: "dateOperation"
+      @class: org.example.configmapping.mapping.transformers.UpperCaseTransformer
+
+  - sourcePath: "birthDate"
+    targetPath: "formattedBirthDate"
     transformer:
       @class: org.example.configmapping.mapping.transformers.DateFormatTransformer
       inputFormat: "yyyy-MM-dd"
       outputFormat: "dd/MM/yyyy"
+
+  - sourcePath: "status"
+    targetPath: "statusFlag"
+    transformer:
+      @class: org.example.configmapping.mapping.transformers.BooleanToFlagTransformer
+      trueValue: "Y"
+      falseValue: "N"
 ```
 
----
+## 🚀 How to Use
 
-## 📚 YAML Files Structure
+### 1. Load Mappings
+Mappings are automatically loaded on application startup from:
 
-### Main Fields:
+```
+classpath:/mappings/definitions/**/*.yml
+```
 
-* `id`: unique mapping identifier
-* `sourceType`: source Java class
-* `targetType`: target Java class
-* `priority`: priority (used for conflict resolution)
-* `fieldMappings`: list of fields to map
+You can customize the path via:
 
-### 🏛️ FieldMapping
+```
+adria.mapping.definitions-path=classpath:/custom/path/
+```
 
-Each field defines a transformation:
-
-* `sourcePath`: source access path (supports SpEL)
-* `targetPath`: destination field
-* `transformer` (optional): transformer to apply
-* `condition` (optional): condition (e.g., `NotNullCondition`)
-* `constant` (optional): constant value
-
----
-
-## 🚀 Usage in Java Code
-
-### Via the TransferMappingService:
-
-The `TransferMappingService` is a convenient wrapper used in the business layer to encapsulate the mapping engine:
+### 2. Perform a Mapping
 
 ```java
-public class TransferMappingService {
-    private final MappingService mappingService;
+TransferMappingService transferService = ...;
 
-    public TransferMappingService(MappingService mappingService) {
-        this.mappingService = mappingService;
-    }
+InputDto source = new InputDto(...);
+OutputDto result = transferService.map(source, OutputDto.class);
+```
 
-    public <S, T> T map(S source, Class<T> targetType) {
-        return mappingService.transform(source, targetType);
-    }
+You can also use a mapping ID or provide a MappingContext:
 
-    public <S, T> T mapWithId(S source, Class<T> targetType, String mappingId, String bankId) {
-        return mappingService.transformWithId(source, targetType, mappingId, null);
+```java
+MappingContext context = new MappingContext();
+context.setBankId("ABC");
+context.putProperty("someKey", someValue);
+
+OutputDto result = transferService.mapWithId(source, OutputDto.class, "myMappingId", "ABC");
+```
+
+## 🔍 REST API for Mapping Edition
+
+| Endpoint | Description |
+|----------|-------------|
+| GET /api/mappings/visualization | List all loaded mappings |
+| GET /api/mappings/visualization/{id} | Get full mapping definition |
+| GET /api/mappings/visualization/{id}/graphviz | Generate DOT (Graphviz) diagram |
+| GET /api/mappings/visualization/{id}/d3 | Get JSON for D3.js |
+| PUT /api/mappings/editor/{id} | Update a mapping |
+| POST /api/mappings/editor/{id}/fields | Add a new field |
+| PUT /api/mappings/editor/{id}/fields/{index} | Update a specific field |
+| DELETE /api/mappings/editor/{id}/fields/{index} | Remove a field |
+
+## 🧩 Built-in Transformers
+
+- UpperCaseTransformer
+- LowerCaseTransformer
+- RegexReplaceTransformer
+- BooleanToFlagTransformer
+- DateFormatTransformer
+- EnumMappingTransformer
+- StringTruncateTransformer
+- DefaultValueTransformer
+- PrefixTransformer
+- StringCastTransformer
+
+## 🛠️ Extending the Engine
+
+You can implement custom transformers by extending ValueTransformer:
+
+```java
+public class MyCustomTransformer implements ValueTransformer {
+    @Override
+    public Object transform(Object value, MappingContext context) {
+        // your transformation logic here
     }
 }
 ```
 
-Usage:
+Or implement a condition:
 
 ```java
-DeviseDTO dto = transferMappingService.map(externalRate, DeviseDTO.class);
+public class MyCondition implements MappingCondition {
+    @Override
+    public boolean evaluate(Object source, Object target, MappingContext context) {
+        // conditional logic
+    }
+
+    @Override
+    public MappingCondition copy() {
+        return new MyCondition();
+    }
+}
 ```
 
----
+## 📦 Build & Run
 
-## 🧰 Ready-to-Use Transformers
+Requirements: Java 17+, Maven 3.8+
 
-Here is the complete list of transformers available in the engine, with a brief description:
-
-* `BooleanToFlagTransformer`: Converts a boolean to a numeric indicator (true → 1, false → 0)
-* `DateFormatTransformer`: Reformats a date (String or Date) from one format to another
-* `DateToStringTransformer`: Converts a Date object to a string according to a given format
-* `DefaultValueTransformer`: Provides a default value if the source value is null
-* `EnumMappingTransformer`: Maps a text value to a Java enumeration element
-* `GlobalRemainingToDroitUtilisationTransformer`: Specific business transformer related to global usage rights
-* `LowerCaseTransformer`: Converts the source string to lowercase
-* `PrefixTransformer`: Adds a prefix to the source value (useful for identifiers or labels)
-* `RegexReplaceTransformer`: Applies a regex transformation (e.g., text cleaning or formatting)
-* `StringCastTransformer`: Applies `toString()` to any object
-* `StringToBigDecimalTransformer`: Converts a string to `BigDecimal`
-* `StringToDateTransformer`: Converts a string to `Date` using an input format
-* `StringToIntTransformer`: Converts a string to an integer (`Integer`)
-* `StringTruncateTransformer`: Truncates the string to a maximum length
-* `TypeConverterTransformer`: Generic converter between Java types (String → Integer, etc.)
-* `UpperCaseTransformer`: Converts the source string to uppercase
-
-You can also add your own custom transformers by implementing the `ValueTransformer` interface.
-
-### Example of YAML Definition with Transformers:
-
-```yaml
-fieldMappings:
-  - sourcePath: "updateDate"
-    targetPath: "applicationdate"
-    transformer:
-      @class: org.example.configmapping.mapping.transformers.DateFormatTransformer
-       inputFormat: "yyyy-MM-dd'T'HH:mm:ss'Z'"
-       outputFormat: "yyyy-MM-dd"
-
-  - sourcePath: "rate"
-    targetPath: "formattedRate"
-    transformers:
-      - @class: org.example.configmapping.mapping.transformers.InverseRateTransformer
-           scale: 6
-      - @class: org.example.configmapping.mapping.transformers.TypeConverterTransformer
-           targetType: "java.lang.String"
+```
+mvn clean install
+mvn spring-boot:run
 ```
 
----
+Visit the visualizer:
 
-## ⚠️ Best Practices
+```
+http://localhost:8080/static/mapping-visualizer
+```
 
-* Define a clear and explicit `mappingId`
-* Always use a transformer for type conversions (e.g., date, amount)
-* Document each YAML file with an explanatory comment
-* Avoid business logic in mapping (use simple and targeted transformers)
-* Prefer composition of small reusable transformers
+## 📄 License
 
----
+This project is licensed under the MIT License.
 
-## 📄 Conclusion
+## 👥 Contributors
 
-This engine allows you to create robust, maintainable, and adaptable mappings to your needs without modifying Java code.
-Each mapping is easily testable and replaceable via simple YAML configuration.
-
-You are free to add your own transformers according to specific business needs.
+- Ilyas Dahhou – Project owner
+- FATIMA ASEBBANE – Contributor
